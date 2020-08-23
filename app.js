@@ -1,6 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
 
+const usersRoutes = require("./routes/users");
+
 const app = express();
 
 app.use(express.json());
@@ -17,10 +19,15 @@ app.use((req, res, next) => {
     "Access-Control-Allow-Methods",
     "OPTIONS, GET, POST, PATCH, DELETE"
   );
+
+  next();
 });
+
+app.use("/api/usuarios", usersRoutes);
 
 // error middleware
 app.use((error, req, res, next) => {
+  console.log(error);
   res.status(error.httpStatusCode || 500).json({
     message:
       error.message || "Um erro desconhecido ocorreu. Contate o desenvolvedor.",
