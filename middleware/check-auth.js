@@ -16,7 +16,13 @@ module.exports = (req, res, next) => {
       throw new Error("Falha na autenticação.");
     }
 
-    console.log(decoded);
-    next();
+    if (!decoded) {
+      const error = new Error("Falha na autenticação.");
+      error.httpStatusCode = 401;
+      throw error;
+    } else {
+      req.loggedUserId = decoded.loggedUserId;
+      next();
+    }
   });
 };

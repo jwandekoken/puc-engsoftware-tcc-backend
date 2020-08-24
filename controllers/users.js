@@ -4,98 +4,6 @@ const jwt = require("jsonwebtoken");
 
 const User = require("../models/user");
 
-exports.getUsers = (req, res, next) => {
-  User.find({}, "-password")
-    .then((users) => {
-      res.json({
-        users,
-      });
-    })
-    .catch((err) => {
-      console.log(err);
-      const error = new Error(err);
-      return next(error);
-    });
-};
-
-exports.signup = (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    const error = new Error("Erro de validação. Cheque os inputs informados.");
-    error.httpStatusCode = 422;
-    return next(error);
-  }
-
-  const {
-    name,
-    email,
-    password,
-    cpf,
-    rg,
-    userType,
-    address,
-    typeOfActivity,
-  } = req.body;
-
-  User.findOne({ email })
-    .then((user) => {
-      if (user) {
-        const error = new Error("Email informado já cadastrado.");
-        error.httpStatusCode = 422;
-        return next(error);
-      }
-
-      bcrypt
-        .hash(password, 12)
-        .then((hashedPassword) => {
-          const newUser = new User({
-            name,
-            email,
-            password: hashedPassword,
-            cpf,
-            rg,
-            userType,
-            address,
-            typeOfActivity,
-          });
-
-          newUser
-            .save()
-            .then((user) => {
-              jwt.sign(
-                { user },
-                "mySuperSecretDontShare",
-                { expiresIn: "1h" },
-                (err, token) => {
-                  if (err) {
-                    const error = new Error(err);
-                    return next(error);
-                  }
-                  res.json({
-                    token,
-                  });
-                }
-              );
-            })
-            .catch((err) => {
-              console.log(err);
-              const error = new Error(err);
-              return next(error);
-            });
-        })
-        .catch((err) => {
-          console.log(err);
-          const error = new Error(err);
-          return next(error);
-        });
-    })
-    .catch((err) => {
-      console.log(err);
-      const error = new Error(err);
-      return next(error);
-    });
-};
-
 exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
@@ -116,9 +24,8 @@ exports.login = (req, res, next) => {
           const error = new Error("Credenciais inválidas, tente novamente.");
           return next(error);
         } else {
-          console.log(result);
           jwt.sign(
-            { user },
+            { loggedUserId: user._id },
             "mySuperSecretDontShare",
             { expiresIn: "1h" },
             (err, token) => {
@@ -132,6 +39,110 @@ exports.login = (req, res, next) => {
             }
           );
         }
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+      const error = new Error(err);
+      return next(error);
+    });
+};
+
+exports.signup = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const error = new Error("Erro de validação. Cheque os inputs informados.");
+    error.httpStatusCode = 422;
+    return next(error);
+  }
+
+  User.findById(req.loggedUserId)
+    .then((loggedUser) => {
+      if (!loggedUser) {
+        const error = new Error("Você não tem permissões para isso.");
+        error.httpStatusCode = 401;
+        return next(error);
+      }
+
+      if (
+        loggedUser.userType === "cliente" ||
+        loggedUser.userType === "instrutor"
+      ) {
+        const error = new Error("Você não tem permissões para isso.");
+        error.httpStatusCode = 401;
+        return next(error);
+      }
+
+      const {
+        name,
+        email,
+        password,
+        cpf,
+        rg,
+        userType,
+        address,
+        typeOfActivity,
+      } = req.body;
+
+      User.findOne({ email })
+        .then((user) => {
+          if (user) {
+            const error = new Error("Email informado já cadastrado.");
+            error.httpStatusCode = 422;
+            return next(error);
+          }
+
+          bcrypt
+            .hash(password, 12)
+            .then((hashedPassword) => {
+              const newUser = new User({
+                name,
+                email,
+                password: hashedPassword,
+                cpf,
+                rg,
+                userType,
+                address,
+                typeOfActivity,
+              });
+
+              newUser
+                .save()
+                .then((user) => {
+                  res.json({
+                    user,
+                  });
+                })
+                .catch((err) => {
+                  console.log(err);
+                  const error = new Error(err);
+                  return next(error);
+                });
+            })
+            .catch((err) => {
+              console.log(err);
+              const error = new Error(err);
+              return next(error);
+            });
+        })
+        .catch((err) => {
+          console.log(err);
+          const error = new Error(err);
+          return next(error);
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      const error = new Error(err);
+      return next(error);
+    });
+};
+
+exports.getUsers = (req, res, next) => {
+  User.find({}, "-password")
+    .then((users) => {
+      res.json({
+        users,
       });
     })
     .catch((err) => {

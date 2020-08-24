@@ -11,7 +11,7 @@ const router = express.Router();
 router.post("/login", usersController.login);
 
 // create new user
-// not protected
+// protected
 router.post(
   "/novo",
   [
@@ -23,6 +23,7 @@ router.post(
     check("userType").not().isEmpty(),
     check("address").not().isEmpty(),
   ],
+  checkAuth,
   usersController.signup
 );
 
