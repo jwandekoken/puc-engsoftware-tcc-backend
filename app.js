@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 
 const usersRoutes = require("./routes/users");
+const signaturePlansRoutes = require("./routes/signaturePlans");
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use((req, res, next) => {
 });
 
 app.use("/api/usuarios", usersRoutes);
+app.use("/api/planos", signaturePlansRoutes);
 
 // error middleware
 app.use((error, req, res, next) => {
@@ -45,5 +47,5 @@ mongoose
   })
   .catch((err) => {
     console.log(err);
-    next(err);
+    throw err;
   });
