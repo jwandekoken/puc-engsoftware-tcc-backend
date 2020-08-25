@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 
 const usersRoutes = require("./routes/users");
 const signaturePlansRoutes = require("./routes/signaturePlans");
+const paymentRoutes = require("./routes/payments");
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use((req, res, next) => {
 
 app.use("/api/usuarios", usersRoutes);
 app.use("/api/planos", signaturePlansRoutes);
+app.use("/api/pagamentos", paymentRoutes);
 
 // error middleware
 app.use((error, req, res, next) => {

@@ -6,10 +6,6 @@ const paymentSchema = new mongoose.Schema({
     ref: "signaturePlan",
     required: true,
   },
-  dueDate: {
-    type: Date,
-    required: true,
-  },
   paymentDate: {
     type: Date,
     required: true,
