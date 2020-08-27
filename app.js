@@ -33,7 +33,7 @@ app.use("/api/pagamentos", paymentRoutes);
 app.use((error, req, res, next) => {
   console.log(error);
   res.status(error.httpStatusCode || 500).json({
-    message:
+    error:
       error.message || "Um erro desconhecido ocorreu. Contate o desenvolvedor.",
   });
 });

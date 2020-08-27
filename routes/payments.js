@@ -18,4 +18,8 @@ router.post(
   paymentsController.createNew
 );
 
+// check for unpaying customers
+// protected
+router.post("/unpaying", checkAuth, paymentsController.unpaying);
+
 module.exports = router;

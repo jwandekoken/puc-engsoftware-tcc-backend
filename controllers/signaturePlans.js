@@ -2,6 +2,7 @@ const { validationResult } = require("express-validator");
 
 const User = require("../models/user");
 const SignaturePlan = require("../models/signaturePlan");
+const Payment = require("../models/payment");
 
 exports.createNew = (req, res, next) => {
   const errors = validationResult(req);
@@ -38,9 +39,25 @@ exports.createNew = (req, res, next) => {
       newSignaturePlan
         .save()
         .then((signaturePlan) => {
-          res.json({
-            signaturePlan,
+          const newPayment = new Payment({
+            signaturePlan_id: signaturePlan._id,
+            paymentDate: Date.now(),
+            value: signaturePlan.price,
           });
+
+          newPayment
+            .save()
+            .then((payment) => {
+              res.json({
+                signaturePlan,
+                payment,
+              });
+            })
+            .catch((err) => {
+              console.log(err);
+              const error = new Error(err);
+              return next(error);
+            });
         })
         .catch((err) => {
           console.log(err);
