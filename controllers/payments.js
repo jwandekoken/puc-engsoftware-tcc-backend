@@ -50,38 +50,66 @@ exports.unpaying = (req, res, next) => {
 
   // make search for unpaying customers without paramethers
   if (!name || !startingDate || !finishingDate) {
-    User.find({ userType: "cliente" }, "_id")
-      .then((users) => {
-        const signaturePlanQueries = [];
+    SignaturePlan.find({})
+      .populate("client_id")
+      .exec()
+      .then((listOfSignaturePlans) => {
+        const paymentsQueries = [];
 
-        users.forEach((user) => {
-          signaturePlanQueries.push(
-            SignaturePlan.findOne({ client_id: user._id }).exec()
+        listOfSignaturePlans.forEach((plan) => {
+          paymentsQueries.push(
+            Payment.findOne({ signaturePlan_id: plan._id }).exec()
           );
         });
 
-        Promise.all(signaturePlanQueries)
-          .then((listOfSignaturePlans) => {
-            const paymentsQueries = [];
+        Promise.all(paymentsQueries)
+          .then((listOfPayments) => {
+            const currentDate = new Date();
 
-            listOfSignaturePlans.forEach((plan) => {
-              paymentsQueries.push(
-                Payment.find({ signaturePlan_id: plan._id }).exec()
-              );
+            const signaturePlansArr = listOfSignaturePlans.map((plan) => {
+              const planStartingDate = new Date(plan.dateOfStart);
+
+              if (plan.planType === "mensal") {
+                let monthsSinceStart =
+                  (currentDate.getFullYear() - planStartingDate.getFullYear()) *
+                  12;
+                monthsSinceStart =
+                  monthsSinceStart - planStartingDate.getMonth();
+                monthsSinceStart = monthsSinceStart + currentDate.getMonth();
+                monthsSinceStart = monthsSinceStart <= 0 ? 0 : monthsSinceStart;
+
+                const paymentsNeeded = monthsSinceStart + 1;
+
+                const planPayments = listOfPayments.filter(
+                  (payment) =>
+                    payment.signaturePlan_id.toString() === plan._id.toString()
+                );
+
+                return {
+                  ...plan._doc,
+                  unpayments: paymentsNeeded - planPayments.length,
+                };
+              } else if (plan.planType === "anual") {
+                let yearsSinceStart =
+                  currentDate.getFullYear() - planStartingDate.getFullYear();
+
+                const paymentsNeeded = yearsSinceStart + 1;
+
+                const planPayments = listOfPayments.filter(
+                  (payment) =>
+                    payment.signaturePlan_id.toString() === plan._id.toString()
+                );
+
+                return {
+                  ...plan._doc,
+                  unpayments: paymentsNeeded - planPayments.length,
+                };
+              }
             });
 
-            Promise.all(paymentsQueries)
-              .then((listOfPayments) => {
-                res.json({
-                  listOfSignaturePlans,
-                  listOfPayments,
-                });
-              })
-              .catch((err) => {
-                console.log(err);
-                const error = new Error(err);
-                return next(error);
-              });
+            res.json({
+              signaturePlansArr,
+            });
           })
           .catch((err) => {
             console.log(err);
