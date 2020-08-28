@@ -49,7 +49,7 @@ exports.unpaying = (req, res, next) => {
   const { name, startingDate, finishingDate } = req.body;
 
   // make search for unpaying customers without paramethers
-  if (!name || !startingDate || !finishingDate) {
+  if (!name && !startingDate && !finishingDate) {
     SignaturePlan.find({})
       .populate("client_id")
       .exec()
@@ -65,9 +65,15 @@ exports.unpaying = (req, res, next) => {
         Promise.all(paymentsQueries)
           .then((listOfPayments) => {
             const currentDate = new Date();
+            const currentDate_day = currentDate.getDate();
+            const currentDate_month = currentDate.getMonth();
+            const currentDate_year = currentDate.getFullYear();
 
             const signaturePlansArr = listOfSignaturePlans.map((plan) => {
               const planStartingDate = new Date(plan.dateOfStart);
+              const planStartingDate_day = planStartingDate.getDate();
+              const planStartingDate_month = planStartingDate.getMonth();
+              const planStartingDate_year = planStartingDate.getFullYear();
 
               if (plan.planType === "mensal") {
                 let monthsSinceStart =
@@ -85,10 +91,21 @@ exports.unpaying = (req, res, next) => {
                     payment.signaturePlan_id.toString() === plan._id.toString()
                 );
 
-                return {
-                  ...plan._doc,
-                  unpayments: paymentsNeeded - planPayments.length,
-                };
+                const unpayments = paymentsNeeded - planPayments.length;
+
+                const unpaidSince = new Date(
+                  currentDate_year,
+                  currentDate_month - unpayments,
+                  planStartingDate_day
+                );
+
+                if (unpayments > 0) {
+                  return {
+                    ...plan._doc,
+                    unpayments,
+                    unpaidSince,
+                  };
+                }
               } else if (plan.planType === "anual") {
                 let yearsSinceStart =
                   currentDate.getFullYear() - planStartingDate.getFullYear();
@@ -100,15 +117,30 @@ exports.unpaying = (req, res, next) => {
                     payment.signaturePlan_id.toString() === plan._id.toString()
                 );
 
-                return {
-                  ...plan._doc,
-                  unpayments: paymentsNeeded - planPayments.length,
-                };
+                const unpayments = paymentsNeeded - planPayments.length;
+
+                const unpaidSince = new Date(
+                  currentDate_year - unpayments,
+                  planStartingDate_month,
+                  planStartingDate_day
+                );
+
+                if (unpayments > 0) {
+                  return {
+                    ...plan._doc,
+                    unpayments,
+                    unpaidSince,
+                  };
+                }
               }
             });
 
+            const signaturePlansArrFinal = signaturePlansArr.filter(
+              (plan) => plan !== null && plan !== undefined
+            );
+
             res.json({
-              signaturePlansArr,
+              signaturePlans: signaturePlansArrFinal,
             });
           })
           .catch((err) => {
