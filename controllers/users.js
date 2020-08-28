@@ -27,7 +27,7 @@ exports.login = (req, res, next) => {
           jwt.sign(
             { loggedUserId: user._id },
             "mySuperSecretDontShare",
-            { expiresIn: "1h" },
+            { expiresIn: "5h" },
             (err, token) => {
               if (err) {
                 const error = new Error(err);
