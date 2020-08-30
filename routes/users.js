@@ -33,7 +33,7 @@ router.get("/", checkAuth, usersController.getUsers);
 
 // get user by name
 // protected
-router.get("/:name", checkAuth, usersController.getUserByName);
+router.get("/:name", checkAuth, usersController.getClientByName);
 
 // updated instructor user
 // protected

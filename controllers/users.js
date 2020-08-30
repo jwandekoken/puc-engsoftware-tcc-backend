@@ -153,7 +153,7 @@ exports.getUsers = (req, res, next) => {
     });
 };
 
-exports.getUserByName = (req, res, next) => {
+exports.getClientByName = (req, res, next) => {
   const { name } = req.params;
 
   User.findOne({ name: { $regex: new RegExp(name), $options: "i" } })
@@ -161,6 +161,12 @@ exports.getUserByName = (req, res, next) => {
     .then((user) => {
       if (!user) {
         const error = new Error("Usuario não encontrado");
+        error.httpStatusCode = 404;
+        return next(error);
+      }
+
+      if (user.userType !== "cliente") {
+        const error = new Error("Usuario não encontrado (não é cliente).");
         error.httpStatusCode = 404;
         return next(error);
       }
