@@ -8,12 +8,10 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: true,
     unique: true,
   },
   password: {
     type: String,
-    required: true,
     minlength: 6,
   },
   cpf: {
@@ -31,23 +29,18 @@ const userSchema = new mongoose.Schema({
   address: {
     street: {
       type: String,
-      required: true,
     },
     houseNumber: {
       type: String,
-      required: true,
     },
     neighbourhood: {
       type: String,
-      required: true,
     },
     city: {
       type: String,
-      required: true,
     },
     state: {
       type: String,
-      required: true,
     },
   },
   biometry: {

@@ -27,6 +27,21 @@ router.post(
   usersController.signup
 );
 
+// create new instructor
+// protected
+router.post(
+  "/instrutor/novo",
+  [
+    check("name").not().isEmpty(),
+    check("cpf").not().isEmpty(),
+    check("rg").not().isEmpty(),
+    check("userType").not().isEmpty(),
+    check("typeOfActivity").not().isEmpty(),
+  ],
+  checkAuth,
+  usersController.createNewInstructor
+);
+
 // get all users
 // protected
 router.get("/", checkAuth, usersController.getUsers);

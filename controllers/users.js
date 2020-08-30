@@ -198,6 +198,61 @@ exports.getClientByName = (req, res, next) => {
     });
 };
 
+exports.createNewInstructor = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const error = new Error("Erro de validação. Cheque os inputs informados.");
+    error.httpStatusCode = 422;
+    return next(error);
+  }
+
+  User.findById(req.loggedUserId)
+    .then((loggedUser) => {
+      if (!loggedUser) {
+        const error = new Error("Você não tem permissões para isso.");
+        error.httpStatusCode = 401;
+        return next(error);
+      }
+
+      if (
+        loggedUser.userType === "cliente" ||
+        loggedUser.userType === "instrutor"
+      ) {
+        const error = new Error("Você não tem permissões para isso.");
+        error.httpStatusCode = 401;
+        return next(error);
+      }
+
+      const { name, cpf, rg, userType, typeOfActivity } = req.body;
+
+      const newInstructor = new User({
+        name,
+        cpf,
+        rg,
+        userType,
+        typeOfActivity,
+      });
+
+      newInstructor
+        .save()
+        .then((user) => {
+          res.json({
+            instructor: user,
+          });
+        })
+        .catch((err) => {
+          console.log(err);
+          const error = new Error(err);
+          return next(error);
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      const error = new Error(err);
+      return next(error);
+    });
+};
+
 exports.getInstructorByName = (req, res, next) => {
   const { name } = req.params;
 
