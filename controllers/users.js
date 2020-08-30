@@ -152,6 +152,29 @@ exports.getUsers = (req, res, next) => {
     });
 };
 
+exports.getUserByName = (req, res, next) => {
+  const { name } = req.params;
+
+  User.findOne({ name: { $regex: new RegExp(name), $options: "i" } })
+    .exec()
+    .then((user) => {
+      if (!user) {
+        const error = new Error("Usuario não encontrado");
+        error.httpStatusCode = 404;
+        return next(error);
+      }
+
+      res.json({
+        user,
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+      const error = new Error(err);
+      return next(error);
+    });
+};
+
 exports.updateInstructor = (req, res, next) => {
   const { name, cpf, rg, typeOfActivity } = req.body;
 

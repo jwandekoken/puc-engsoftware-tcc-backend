@@ -31,6 +31,10 @@ router.post(
 // protected
 router.get("/", checkAuth, usersController.getUsers);
 
+// get user by name
+// protected
+router.get("/:name", checkAuth, usersController.getUserByName);
+
 // updated instructor user
 // protected
 router.patch(
