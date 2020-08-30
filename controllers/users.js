@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const User = require("../models/user");
+const SignaturePlan = require("../models/signaturePlan");
 
 exports.login = (req, res, next) => {
   const { email, password } = req.body;
@@ -164,9 +165,25 @@ exports.getUserByName = (req, res, next) => {
         return next(error);
       }
 
-      res.json({
-        user,
-      });
+      SignaturePlan.findOne({ client_id: user._id })
+        .populate("client_id")
+        .exec()
+        .then((userData) => {
+          if (!userData) {
+            const error = new Error("Usuario não possui plano ativo");
+            error.httpStatusCode = 404;
+            return next(error);
+          }
+
+          res.json({
+            userData,
+          });
+        })
+        .catch((err) => {
+          console.log(err);
+          const error = new Error(err);
+          return next(error);
+        });
     })
     .catch((err) => {
       console.log(err);
