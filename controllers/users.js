@@ -198,6 +198,35 @@ exports.getClientByName = (req, res, next) => {
     });
 };
 
+exports.getInstructorByName = (req, res, next) => {
+  const { name } = req.params;
+
+  User.findOne({ name: { $regex: new RegExp(name), $options: "i" } })
+    .exec()
+    .then((user) => {
+      if (!user) {
+        const error = new Error("Instrutor não encontrado");
+        error.httpStatusCode = 404;
+        return next(error);
+      }
+
+      if (user.userType !== "instrutor") {
+        const error = new Error("Instrutor não encontrado (não é instrutor).");
+        error.httpStatusCode = 404;
+        return next(error);
+      }
+
+      res.json({
+        instructor: user,
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+      const error = new Error(err);
+      return next(error);
+    });
+};
+
 exports.updateInstructor = (req, res, next) => {
   const { name, cpf, rg, typeOfActivity } = req.body;
 
